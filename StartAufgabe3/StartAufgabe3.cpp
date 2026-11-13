@@ -55,18 +55,57 @@ struct myVertexType //selbst definierter Datentyp für die Shaderprogramme
 myVertexType vertices[36];//Array für die 36 Eckpunkte des Würfels (12 Dreiecke)
 
 float ambfac = 0.7;
+float diffFac = 0.7;
+float specFac = 0.7;
+float shinFac = 0.7;
 
 //Key-Callback
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (action != 0)//nur beim Hinunterdrücken einer Taste
 	{
+		// Ambienter Faktor
 		if (key == GLFW_KEY_A)//Wenn diese Taste "A" war
 		{
 			if (mods == 1)//Wenn Shift zusätzlich gehalten ist
 				ambfac += .1f;//ambienten Faktor erhöhen
 			else
 				ambfac -= .1f;//ambienten Faktor senken
+
+			fprintf(stdout, "Ambient Factor: %f\n", ambfac);
+		}
+
+		// Diffuser Faktor
+		if (key == GLFW_KEY_D) 
+		{
+			if (mods == 1)
+				diffFac += .1f;
+			else
+				diffFac -= .1f;
+
+			fprintf(stdout, "Diffuse Factor: %f\n", diffFac);
+		}
+
+		// Spekularer Faktor
+		if (key == GLFW_KEY_S)
+		{
+			if (mods == 1)
+				specFac += .1f;
+			else
+				specFac -= .1f;
+
+			fprintf(stdout, "Specular Factor: %f\n", specFac);
+		}
+
+		// Shininess-Faktor
+		if (key == GLFW_KEY_H)
+		{
+			if (mods == 1)
+				shinFac += .1f;
+			else
+				shinFac -= .1f;
+
+			fprintf(stdout, "Shininess Factor: %f\n", shinFac);
 		}
 	}
 }
@@ -75,8 +114,11 @@ int main(void)
 {
 	GLFWwindow* window;
 	GLuint vertex_buffer, vertex_shader, fragment_shader, complete_shader_program;
-	GLint  matrix_access, ambient, position_access, color_access;
-	GLint diffuse, specular, shininess;
+	GLint  matrix_access, position_access, color_access;
+
+	GLint ambient, diffuse, specular, shininess;	//Uniforme Positionen für den Zugriff während des Renderns
+	GLint light_pos;								//Uniforme Position für die Lichtquelle
+	GLint normal_access;							//Zugriff auf Normalenvektor innerhalb des Vertex-Buffers
 
 	myVertexType cubeEdges[8]
 	{
@@ -205,14 +247,18 @@ int main(void)
 
 	//Uniforme Positionen für den Zugriff während des Renderns
 	matrix_access = glGetUniformLocation(complete_shader_program, "matrix");
-	ambient = glGetUniformLocation(complete_shader_program, "ambientFactor");
+	ambient = glGetUniformLocation(complete_shader_program, "params.ambientFactor");
 	diffuse = glGetUniformLocation(complete_shader_program, "params.diffuseFactor");
 	specular = glGetUniformLocation(complete_shader_program, "params.specFactor");
 	shininess = glGetUniformLocation(complete_shader_program, "params.shininess");
+	light_pos = glGetUniformLocation(complete_shader_program, "lightPos");
 
 	//Zugriff auf Position und Farbe innerhalb des Vertex-Buffers
 	position_access = glGetAttribLocation(complete_shader_program, "position");
 	color_access = glGetAttribLocation(complete_shader_program, "color");
+
+	//Zugriff auf Normalenvektor innerhalb des Vertex-Buffers
+	normal_access = glGetAttribLocation(complete_shader_program, "normal");
 
 	//Aufbau und Übermittlung des Vertex-Buffers
 	glGenBuffers(1, &vertex_buffer);
@@ -227,6 +273,10 @@ int main(void)
 	glEnableVertexAttribArray(color_access);
 	glVertexAttribPointer(color_access, 3, GL_FLOAT, GL_FALSE,
 		sizeof(myVertexType), (void*)(sizeof(float) * 3));
+
+	glEnableVertexAttribArray(normal_access);
+	glVertexAttribPointer(normal_access, 3, GL_FLOAT, GL_FALSE,
+		sizeof(myVertexType), (void*)(sizeof(float) * 6));
 
 
 
@@ -245,12 +295,17 @@ int main(void)
 		//Rotationsmatrix erstellen
 		mat4x4_identity(m);//Über die Linmath.h wird eine 4x4 Einheitsmatrix erzeugt
 		mat4x4_rotate_Z(m, m, (float)glfwGetTime());//Auf die Matrix m wird eine Rotation um Z aufmultipliziert
-		mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
+		//mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
 		mat4x4_rotate_Y(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
 		mat4x4_rotate_X(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
 		glUniformMatrix4fv(matrix_access, 1, GL_FALSE, (const GLfloat*)m);// Die Matrix wird in das Shader-Programm übertragen
 
 		glUniform1f(ambient, ambfac);// Der ambiente Faktor wird in das Shader-Programm übertragen
+		glUniform1f(diffuse, diffFac);// Der diffuse Faktor wird in das Shader-Programm übertragen
+		glUniform1f(specular, specFac);// Der specular Faktor wird in das Shader-Programm übertragen
+		glUniform1f(shininess, shinFac);// Der Shininess-Faktor wird in das Shader-Programm übertragen
+
+		glUniform3f(light_pos, 0.0, 0.0, 1.0); // Position der Lichtquelle
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);//36 Vertices werden gezeichnet (12 Dreiecke)
 

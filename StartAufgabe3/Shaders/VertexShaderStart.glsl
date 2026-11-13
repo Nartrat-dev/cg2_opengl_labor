@@ -13,6 +13,7 @@ out vec3 fragPos;
 void main()
 {
     gl_Position = matrix * vec4(position, 1.0);      
+
     fragPos = (matrix * vec4(position, 1.0)).xyz;                        // Zugängliche Kopie für den Fragment-Shader
     colorForFragmentShader = color;
     normalVectorForFragmentShader = (matrix * vec4(normal, 1.0)).xyz;   // Normalenvektor transformieren und an den Fragment-Shader weitergeben
