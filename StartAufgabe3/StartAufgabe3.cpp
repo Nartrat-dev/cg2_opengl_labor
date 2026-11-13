@@ -44,7 +44,7 @@ struct myVertexType //selbst definierter Datentyp für die Shaderprogramme
 
 };
 
-myVertexType vertices[3];//Array mit drei Vertexen
+myVertexType vertices[36];//Array mit 36 Vertexen -> stellt Würfel dar
 
 float ambfac = 0.7;
 
@@ -89,11 +89,60 @@ int main(void)
 		cubeEdges[i].z *= 0.5;
 	}
 
-	//linke Seite erstes Dreieck
+	//rechte Seite des Würfels
 	vertices[0] = cubeEdges[2];
 	vertices[1] = cubeEdges[1];
 	vertices[2] = cubeEdges[0];
 
+	vertices[3] = cubeEdges[0];
+	vertices[4] = cubeEdges[3];
+	vertices[5] = cubeEdges[2];
+
+	//linke Seite des Würfels
+	vertices[6] = cubeEdges[4];
+	vertices[7] = cubeEdges[5];
+	vertices[8] = cubeEdges[6];
+
+	vertices[9] = cubeEdges[6];
+	vertices[10] = cubeEdges[7];
+	vertices[11] = cubeEdges[4];
+
+	//obere Seite des Würfels
+
+	vertices[12] = cubeEdges[0];
+	vertices[13] = cubeEdges[1];
+	vertices[14] = cubeEdges[7];
+
+	vertices[15] = cubeEdges[0];
+	vertices[16] = cubeEdges[4];
+	vertices[17] = cubeEdges[7];
+	
+	//untere Seite des Würfels
+	vertices[18] = cubeEdges[2];
+	vertices[19] = cubeEdges[3];
+	vertices[20] = cubeEdges[5];
+
+	vertices[21] = cubeEdges[2];
+	vertices[22] = cubeEdges[5];
+	vertices[23] = cubeEdges[6];
+
+	//vordere Seite des Würfels
+	vertices[24] = cubeEdges[0];
+	vertices[25] = cubeEdges[3];
+	vertices[26] = cubeEdges[4];
+
+	vertices[27] = cubeEdges[3];
+	vertices[28] = cubeEdges[5];
+	vertices[29] = cubeEdges[4];
+
+	//hintere Seite des Würfels
+	vertices[30] = cubeEdges[1];
+	vertices[31] = cubeEdges[2];
+	vertices[32] = cubeEdges[6];
+
+	vertices[33] = cubeEdges[1];
+	vertices[34] = cubeEdges[6];
+	vertices[35] = cubeEdges[7];
 
 
 	if (!glfwInit())//GLFW initialisieren
@@ -174,14 +223,15 @@ int main(void)
 
 		//Rotationsmatrix erstellen
 		mat4x4_identity(m);//Über die Linmath.h wird eine 4x4 Einheitsmatrix erzeugt
-		//	mat4x4_rotate_Z(m, m, (float)glfwGetTime());//Auf die Matrix m wird eine Rotation um Z aufmultipliziert
+		mat4x4_rotate_Z(m, m, (float)glfwGetTime());//Auf die Matrix m wird eine Rotation um Z aufmultipliziert
 		//	mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
 		mat4x4_rotate_Y(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
+		mat4x4_rotate_X(m, m, 2 * PI * 10 / 360 * cos((float)glfwGetTime()));
 		glUniformMatrix4fv(matrix_access, 1, GL_FALSE, (const GLfloat*)m);// Die Matrix wird in das Shader-Programm übertragen
 
 		glUniform1f(ambient, ambfac);// Der ambiente Faktor wird in das Shader-Programm übertragen
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);//Ein Dreieck wird gezeichnet
+		glDrawArrays(GL_TRIANGLES, 0, 36);// 36/3 = 12 Dreiecke werden gezeichnet
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
