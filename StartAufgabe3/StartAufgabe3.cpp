@@ -76,6 +76,7 @@ int main(void)
 	GLFWwindow* window;
 	GLuint vertex_buffer, vertex_shader, fragment_shader, complete_shader_program;
 	GLint  matrix_access, ambient, position_access, color_access;
+	GLint diffuse, specular, shininess;
 
 	myVertexType cubeEdges[8]
 	{
@@ -97,60 +98,68 @@ int main(void)
 		cubeEdges[i].z *= 0.5;
 	}
 
-	//rechte Seite des Würfels
-	vertices[0] = cubeEdges[2];
-	vertices[1] = cubeEdges[1];
-	vertices[2] = cubeEdges[0];
+	// Normalenvektoren
+	vec3 normalRight	=		{ 1.0f, 0.0f, 0.0f };
+	vec3 normalLeft		=		{ -1.0f, 0.0f, 0.0f };
+	vec3 normalTop		=		{ 0.0f, 1.0f, 0.0f };
+	vec3 normalBottom	=		{ 0.0f, -1.0f, 0.0f };
+	vec3 normalFront	=		{ 0.0f, 0.0f, 1.0f };
+	vec3 normalBack		=		{ 0.0f, 0.0f, -1.0f };
 
-	vertices[3] = cubeEdges[0];
-	vertices[4] = cubeEdges[3];
-	vertices[5] = cubeEdges[2];
+	//rechte Seite des Würfels
+	vertices[0] = myVertexType(cubeEdges[2], normalRight);
+	vertices[1] = myVertexType(cubeEdges[1], normalRight);
+	vertices[2] = myVertexType(cubeEdges[0], normalRight);
+
+	vertices[3] = myVertexType(cubeEdges[0], normalRight);
+	vertices[4] = myVertexType(cubeEdges[3], normalRight);
+	vertices[5] = myVertexType(cubeEdges[2], normalRight);
 
 	//linke Seite des Würfels
-	vertices[6] = cubeEdges[4];
-	vertices[7] = cubeEdges[5];
-	vertices[8] = cubeEdges[6];
+	vertices[6] = myVertexType(cubeEdges[4], normalLeft);
+	vertices[7] = myVertexType(cubeEdges[5], normalLeft);
+	vertices[8] = myVertexType(cubeEdges[6], normalLeft);
 
-	vertices[9] = cubeEdges[6];
-	vertices[10] = cubeEdges[7];
-	vertices[11] = cubeEdges[4];
+	vertices[9] = myVertexType(cubeEdges[6], normalLeft);
+	vertices[10] = myVertexType(cubeEdges[7], normalLeft);
+	vertices[11] = myVertexType(cubeEdges[4], normalLeft);
 
 	//obere Seite des Würfels
 
-	vertices[12] = cubeEdges[0];
-	vertices[13] = cubeEdges[1];
-	vertices[14] = cubeEdges[7];
+	vertices[12] = myVertexType(cubeEdges[0], normalTop);
+	vertices[13] = myVertexType(cubeEdges[1], normalTop);
+	vertices[14] = myVertexType(cubeEdges[7], normalTop);
 
-	vertices[15] = cubeEdges[0];
-	vertices[16] = cubeEdges[4];
-	vertices[17] = cubeEdges[7];
+	vertices[15] = myVertexType(cubeEdges[0], normalTop);
+	vertices[16] = myVertexType(cubeEdges[4], normalTop);
+	vertices[17] = myVertexType(cubeEdges[7], normalTop);
 
 	//untere Seite des Würfels
-	vertices[18] = cubeEdges[2];
-	vertices[19] = cubeEdges[3];
-	vertices[20] = cubeEdges[5];
+	vertices[18] = myVertexType(cubeEdges[2], normalBottom);
+	vertices[19] = myVertexType(cubeEdges[3], normalBottom);
+	vertices[20] = myVertexType(cubeEdges[5], normalBottom);
 
-	vertices[21] = cubeEdges[2];
-	vertices[22] = cubeEdges[5];
-	vertices[23] = cubeEdges[6];
+	vertices[21] = myVertexType(cubeEdges[2], normalBottom);
+	vertices[22] = myVertexType(cubeEdges[5], normalBottom);
+	vertices[23] = myVertexType(cubeEdges[6], normalBottom);
 
 	//vordere Seite des Würfels
-	vertices[24] = cubeEdges[0];
-	vertices[25] = cubeEdges[3];
-	vertices[26] = cubeEdges[4];
+	vertices[24] = myVertexType(cubeEdges[0], normalFront);
+	vertices[25] = myVertexType(cubeEdges[3], normalFront);
+	vertices[26] = myVertexType(cubeEdges[4], normalFront);
 
-	vertices[27] = cubeEdges[3];
-	vertices[28] = cubeEdges[5];
-	vertices[29] = cubeEdges[4];
+	vertices[27] = myVertexType(cubeEdges[3], normalFront);
+	vertices[28] = myVertexType(cubeEdges[5], normalFront);
+	vertices[29] = myVertexType(cubeEdges[4], normalFront);
 
 	//hintere Seite des Würfels
-	vertices[30] = cubeEdges[1];
-	vertices[31] = cubeEdges[2];
-	vertices[32] = cubeEdges[6];
+	vertices[30] = myVertexType(cubeEdges[1], normalBack);
+	vertices[31] = myVertexType(cubeEdges[2], normalBack);
+	vertices[32] = myVertexType(cubeEdges[6], normalBack);
 
-	vertices[33] = cubeEdges[1];
-	vertices[34] = cubeEdges[6];
-	vertices[35] = cubeEdges[7];
+	vertices[33] = myVertexType(cubeEdges[1], normalBack);
+	vertices[34] = myVertexType(cubeEdges[6], normalBack);
+	vertices[35] = myVertexType(cubeEdges[7], normalBack);
 
 
 
@@ -197,7 +206,9 @@ int main(void)
 	//Uniforme Positionen für den Zugriff während des Renderns
 	matrix_access = glGetUniformLocation(complete_shader_program, "matrix");
 	ambient = glGetUniformLocation(complete_shader_program, "ambientFactor");
-
+	diffuse = glGetUniformLocation(complete_shader_program, "params.diffuseFactor");
+	specular = glGetUniformLocation(complete_shader_program, "params.specFactor");
+	shininess = glGetUniformLocation(complete_shader_program, "params.shininess");
 
 	//Zugriff auf Position und Farbe innerhalb des Vertex-Buffers
 	position_access = glGetAttribLocation(complete_shader_program, "position");
@@ -216,6 +227,7 @@ int main(void)
 	glEnableVertexAttribArray(color_access);
 	glVertexAttribPointer(color_access, 3, GL_FLOAT, GL_FALSE,
 		sizeof(myVertexType), (void*)(sizeof(float) * 3));
+
 
 
 	//Z-Achse positiv defineren
