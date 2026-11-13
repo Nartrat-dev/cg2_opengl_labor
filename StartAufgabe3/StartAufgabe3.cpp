@@ -16,6 +16,8 @@ struct myVertexType //selbst definierter Datentyp für die Shaderprogramme
 	float x, y, z;
 	float r, g, b;
 
+	float nx, ny, nz; // Komponenten der Normalenvektoren
+
 
 	myVertexType(myVertexType other, vec3 norm)
 	{
@@ -25,8 +27,12 @@ struct myVertexType //selbst definierter Datentyp für die Shaderprogramme
 		r = other.r;
 		g = other.g;
 		b = other.b;
+		nx = norm[0];
+		ny = norm[1];
+		nz = norm[2];
 
 	}
+
 	myVertexType(float x, float y, float z, float r, float g, float b)
 	{
 		this->x = x;
@@ -37,14 +43,16 @@ struct myVertexType //selbst definierter Datentyp für die Shaderprogramme
 		this->g = g;
 		this->b = b;
 
-
-
+		this->nx = 0;
+		this->ny = 0;
+		this->nz = 0;
 	}
-	myVertexType() { x = y = z = r = g = b = 0; }
+
+	myVertexType() { x = y = z = r = g = b = nx = ny = nz = 0; }
 
 };
 
-myVertexType vertices[36];//Array mit 36 Vertexen -> stellt Würfel dar
+myVertexType vertices[36];//Array für die 36 Eckpunkte des Würfels (12 Dreiecke)
 
 float ambfac = 0.7;
 
@@ -116,7 +124,7 @@ int main(void)
 	vertices[15] = cubeEdges[0];
 	vertices[16] = cubeEdges[4];
 	vertices[17] = cubeEdges[7];
-	
+
 	//untere Seite des Würfels
 	vertices[18] = cubeEdges[2];
 	vertices[19] = cubeEdges[3];
@@ -143,6 +151,7 @@ int main(void)
 	vertices[33] = cubeEdges[1];
 	vertices[34] = cubeEdges[6];
 	vertices[35] = cubeEdges[7];
+
 
 
 	if (!glfwInit())//GLFW initialisieren
@@ -224,14 +233,14 @@ int main(void)
 		//Rotationsmatrix erstellen
 		mat4x4_identity(m);//Über die Linmath.h wird eine 4x4 Einheitsmatrix erzeugt
 		mat4x4_rotate_Z(m, m, (float)glfwGetTime());//Auf die Matrix m wird eine Rotation um Z aufmultipliziert
-		//	mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
+		mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
 		mat4x4_rotate_Y(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
-		mat4x4_rotate_X(m, m, 2 * PI * 10 / 360 * cos((float)glfwGetTime()));
+		mat4x4_rotate_X(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
 		glUniformMatrix4fv(matrix_access, 1, GL_FALSE, (const GLfloat*)m);// Die Matrix wird in das Shader-Programm übertragen
 
 		glUniform1f(ambient, ambfac);// Der ambiente Faktor wird in das Shader-Programm übertragen
 
-		glDrawArrays(GL_TRIANGLES, 0, 36);// 36/3 = 12 Dreiecke werden gezeichnet
+		glDrawArrays(GL_TRIANGLES, 0, 36);//36 Vertices werden gezeichnet (12 Dreiecke)
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
