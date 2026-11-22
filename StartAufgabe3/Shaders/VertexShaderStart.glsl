@@ -12,9 +12,18 @@ out vec3 fragPos;
 
 void main()
 {
-    gl_Position = matrix * vec4(position, 1.0);      
+    // hier die Position des Vertexes transformieren
+    vec4 transformedPosition = matrix * vec4(position, 1.0);
 
-    fragPos = (matrix * vec4(position, 1.0)).xyz;                        // Zugängliche Kopie für den Fragment-Shader
+    gl_Position = transformedPosition;
+
+    // Gebe anschließend Position an den FragmentShader weiter
+    fragPos = transformedPosition.xyz;
+
+    // Jetzt wird der normalenvektor transformiert
+    normalVectorForFragmentShader =
+        (matrix * vec4(normal, 0.0)).xyz;       // w = 0, da es sich um eine Richtung handelt
+
+    // Farbe für den FragmentShader weitergeben
     colorForFragmentShader = color;
-    normalVectorForFragmentShader = (matrix * vec4(normal, 1.0)).xyz;   // Normalenvektor transformieren und an den Fragment-Shader weitergeben
-};
+}

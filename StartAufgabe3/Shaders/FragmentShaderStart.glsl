@@ -1,35 +1,47 @@
-#version 410  
+#version 410
 
 struct LightParameters {
     float ambientFactor;
     float diffuseFactor;
     float specFactor;
-    int shininess;
+    float shininess;
 };
 
-in vec3 colorForFragmentShader;  
+in vec3 colorForFragmentShader;
 in vec3 normalVectorForFragmentShader;
 in vec3 fragPos;
 
-uniform float ambientFactor;
 uniform LightParameters params;
+
+// Position der Lichtquelle
+uniform vec3 lightPos;
+
+// Position der Kamera
+const vec3 cameraPos = vec3(0.0, 0.0, 1.0);
 
 out vec4 colorOfMyChoice;
 
-vec3 lightPos = vec3(0.0, 0.0, 1.0);        // Position der Lichtquelle -> fest codiert
-vec3 cameraPose = vec3(0.0, 0.0, 1.0);      // Position der Kamera -> fest codiert
+void main()
+{
+    // Normalenvektor normalisieren
+    vec3 normalDir = normalize(normalVectorForFragmentShader);
 
+    // Richtung zur Lichtquelle berechnen
+    vec3 lightDir = normalize(lightPos - fragPos);
 
-void main()  
-{  
-    vec3 lightDir = normalize(lightPos - fragPos);                          // Richtung zwischen Lichtquelle und Fragment
-    vec3 viewDir = normalize(cameraPose - fragPos);                         // Richtung zwischen Kamera und Fragment
-    vec3 reflectDir = reflect(-lightDir, normalVectorForFragmentShader);    // Reflektionsrichtung des Lichts berechnen
+    // Richtung zur Kamera berechnen
+    vec3 viewDir = normalize(cameraPos - fragPos);
 
-    float ambientFactor = params.ambientFactor;
-    float diffuseFactor = (max(dot(normalVectorForFragmentShader, lightDir), 0.0)) * params.diffuseFactor;      // Diffusanteil der Beleuchtung berechnen
-    float specFactor = (pow(max(dot(viewDir, reflectDir), 0.0), params.shininess) * params.specFactor);         // Spekularanteil der Beleuchtung berechnen
+    // Reflektierten Lichtstrahl berechnen
+    vec3 reflectDir = reflect(-lightDir, normalDir);
 
-    colorOfMyChoice = vec4((ambientFactor + diffuseFactor + specFactor) * colorForFragmentShader, 1.0);  
-};
- 
+    // Beleuchtung
+    float ambient = params.ambientFactor;                                                               // Ambiente Lichtkomponente
+    float diffuse = max(dot(normalDir, lightDir), 0.0) * params.diffuseFactor;                          // Diffuse Lichtkomponente
+    float specular = pow(max(dot(viewDir, reflectDir), 0.0), params.shininess) * params.specFactor;     // Spiegelnde Lichtkomponente
+    
+    float lighting = ambient + diffuse + specular;      // Gesamte Beleuchtung 
+
+    // Farbe
+    colorOfMyChoice = vec4(lighting * colorForFragmentShader, 1.0);
+}

@@ -54,10 +54,10 @@ struct myVertexType //selbst definierter Datentyp für die Shaderprogramme
 
 myVertexType vertices[36];//Array für die 36 Eckpunkte des Würfels (12 Dreiecke)
 
-float ambfac = 0.7;
-float diffFac = 0.7;
-float specFac = 0.7;
-float shinFac = 0.7;
+float ambfac = 0.2f;
+float diffFac = 0.2f;
+float specFac = 0.6f;
+float shinFac = 16.0f;
 
 //Key-Callback
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -72,6 +72,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			else
 				ambfac -= .1f;//ambienten Faktor senken
 
+			if (ambfac < 0.0f) ambfac = 0.0f;
+			if (ambfac > 1.0f) ambfac = 1.0f;
+
 			fprintf(stdout, "Ambient Factor: %f\n", ambfac);
 		}
 
@@ -83,6 +86,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			else
 				diffFac -= .1f;
 
+			if (diffFac < 0.0f) diffFac = 0.0f;
+			if (diffFac > 1.0f) diffFac = 1.0f;
 			fprintf(stdout, "Diffuse Factor: %f\n", diffFac);
 		}
 
@@ -94,6 +99,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			else
 				specFac -= .1f;
 
+			if (specFac < 0.0f) specFac = 0.0f;
+			if (specFac > 1.0f) specFac = 1.0f;
 			fprintf(stdout, "Specular Factor: %f\n", specFac);
 		}
 
@@ -101,9 +108,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_H)
 		{
 			if (mods == 1)
-				shinFac += .1f;
+				shinFac += 1.0f;
 			else
-				shinFac -= .1f;
+				shinFac -= 1.0f;
+
+			if (shinFac < 1.0f) shinFac = 1.0f;
 
 			fprintf(stdout, "Shininess Factor: %f\n", shinFac);
 		}
@@ -295,7 +304,7 @@ int main(void)
 		//Rotationsmatrix erstellen
 		mat4x4_identity(m);//Über die Linmath.h wird eine 4x4 Einheitsmatrix erzeugt
 		mat4x4_rotate_Z(m, m, (float)glfwGetTime());//Auf die Matrix m wird eine Rotation um Z aufmultipliziert
-		//mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
+		mat4x4_rotate_Y(m, m, 10*2*PI/360/*(float)glfwGetTime() / 100*/);//Auf die Matrix m wird eine Rotation um Y aufmultipliziert
 		mat4x4_rotate_Y(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
 		mat4x4_rotate_X(m, m, 2 * PI * 10 / 360 * sin((float)glfwGetTime()));
 		glUniformMatrix4fv(matrix_access, 1, GL_FALSE, (const GLfloat*)m);// Die Matrix wird in das Shader-Programm übertragen
